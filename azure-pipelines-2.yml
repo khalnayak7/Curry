@@ -8,7 +8,7 @@ trigger:
 
 pool:
   vmImage: ubuntu-latest
-  name: LAPTOP-DN9F4KCB
+  name: Default
 
 steps:
 - task: Maven@3
