@@ -23,8 +23,10 @@ steps:
     goals: 'package'
 - task: CopyFiles@2
   inputs:
-    Contents: '**/.war'
+    Contents: '**/*.war'
     TargetFolder: '$(build.artifactstagingdirectory)'
+- script: dir $(System.DefaultWorkingDirectory) /s
+  displayName: 'List all files for debugging'
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
