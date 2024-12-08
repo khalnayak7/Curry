@@ -3,14 +3,56 @@
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/java
 
+# trigger:
+# - master
+
+# pool:
+#   vmImage: ubuntu-latest
+#   name: Default
+
+# steps:
+# - task: Maven@3
+#   inputs:
+#     mavenPomFile: 'pom.xml'
+#     mavenOptions: '-Xmx3072m'
+#     javaHomeOption: 'JDKVersion'
+#     jdkVersionOption: '1.11'
+#     jdkArchitectureOption: 'x64'
+#     publishJUnitResults: true
+#     testResultsFiles: '**/surefire-reports/TEST-*.xml'
+#     goals: 'package'
+# - task: CopyFiles@2
+#   inputs:
+#     Contents: '**/*.war'
+#     TargetFolder: '$(build.artifactstagingdirectory)'
+# - task: PublishBuildArtifacts@1
+#   inputs:
+#     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+#     ArtifactName: 'drop'
+#     publishLocation: 'Container'
+# - task: AzureRmWebAppDeployment@4
+#   inputs:
+#     ConnectionType: 'AzureRM'
+#     azureSubscription: 'Free Trial(5dfc5270-1caf-4add-9a01-7f4f9e8285e1)'
+#     appType: 'webAppLinux'
+#     WebAppName: 'democurry'
+#     packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.war'
+
 trigger:
 - master
 
 pool:
   vmImage: ubuntu-latest
-  name: Default
+
+resources:
+  repositories:
+    - repository: testingRepo
+      type: git
+      name: AzureDemo/AzureDemo
+      ref: master # Specify the branch of the testing repo
 
 steps:
+# Step 1: Build the main application
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'
@@ -21,15 +63,36 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
+
+# Step 2: Copy WAR files from the main app
 - task: CopyFiles@2
   inputs:
     Contents: '**/*.war'
     TargetFolder: '$(build.artifactstagingdirectory)'
+
+# Step 3: Fetch the testing repository
+- checkout: testingRepo
+
+# Step 4: Build and run tests from the testing repository
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'testingRepo/pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.11'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    goals: 'package'
+
+# Step 5: Publish build artifacts (main app and testing results if needed)
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
+
+# Step 6: Deploy the main application
 - task: AzureRmWebAppDeployment@4
   inputs:
     ConnectionType: 'AzureRM'
