@@ -48,7 +48,7 @@ resources:
   repositories:
     - repository: testingRepo
       type: git
-      name: AzureDemo/AzureDemo
+      name: khalnayak7/Automation
       ref: master # Specify the branch of the testing repo
 
 steps:
